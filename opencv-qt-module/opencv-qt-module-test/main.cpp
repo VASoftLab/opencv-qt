@@ -33,7 +33,7 @@ int main()
     cv::Mat frame;
     cv::VideoCapture capture;
 
-    int deviceID = 0; // Default Camera
+    int deviceID = 1; // Default Camera
     int apiID = cv::CAP_ANY;
     capture.open(deviceID, apiID);
 
@@ -77,8 +77,8 @@ int main()
 
     cv::Mat3b frameCombined;
 
-    int deviceIDLeft = 0; // Left Camera
-    int deviceIDRight = 1; // Right Camera
+    int deviceIDLeft    = 1; // Left Camera
+    int deviceIDRight   = 2; // Right Camera
 
     captureLeft.open(deviceIDLeft, cv::CAP_ANY);
     captureRight.open(deviceIDRight, cv::CAP_ANY);
