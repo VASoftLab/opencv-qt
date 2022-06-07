@@ -1,4 +1,5 @@
 #include <iostream>
+#include <filesystem>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
@@ -6,16 +7,22 @@
 
 using namespace std;
 
-#define TIME_DELAY 5
+#define TIME_DELAY 3
+#define SCREENSHOT_COUNT 10
 
 int main()
 {
     cout << "Start opencv-qt-module-test" << endl;
 
+    std::filesystem::path outputFolder = (".//output");
+    std::filesystem::remove_all(outputFolder);
+    std::filesystem::create_directory(outputFolder);
+
     cv::Mat frame;
+    cv::Mat clearFrame;
     cv::VideoCapture capture;
 
-    int deviceID = 0; // Default Camera
+    int deviceID = 1; // Default Camera
     int apiID = cv::CAP_ANY;
     capture.open(deviceID, apiID);
 
@@ -29,6 +36,7 @@ int main()
     auto timeInterval = chrono::duration_cast<chrono::milliseconds>(nowTime - startTime);
 
     int counter = 0;
+    int screenshotCounter = 0;
     bool screenshotFlagNeed = false;
     bool screenshotFlagDone = false;
 
@@ -66,6 +74,8 @@ int main()
             counter = (counter == TIME_DELAY) ? 0 : counter + 1;
         }
 
+        clearFrame = frame.clone();
+
         if (TIME_DELAY - counter == 0)
         {
             cv::rectangle(frame, rect, cv::Scalar(0, 0, 255), cv::FILLED);
@@ -90,20 +100,27 @@ int main()
         // Make a screenshot
         if (screenshotFlagNeed && (!screenshotFlagDone))
         {
+            std::filesystem::path file ("frame_" + std::to_string(++screenshotCounter) + ".jpg");
+            std::filesystem::path fullPath = outputFolder / file;
+            cv::imwrite(fullPath.string(), clearFrame);
+
             auto t = std::time(nullptr);
             auto tm = *std::localtime(&t);
-            cout << "Screenshot made at : " << std::put_time(&tm, "%H:%M:%S") << std::endl;
+            cout << "Screenshot (" + std::to_string(screenshotCounter) + "/" + std::to_string(SCREENSHOT_COUNT) + ") made at : " << std::put_time(&tm, "%H:%M:%S") << std::endl;
 
             screenshotFlagNeed = false;
             screenshotFlagDone = true;
         }
+
+        if (screenshotCounter >= SCREENSHOT_COUNT)
+            break;
 
         if (cv::waitKey(5) >= 0)
             break;
     }
     //==========================================================================
     cv::destroyAllWindows();
-    cout << "Done. Press any key to exit..." << endl;
+    cout << "Done" << endl << "Press any key to exit..." << endl;
     cin.get();
 
     return 0;
