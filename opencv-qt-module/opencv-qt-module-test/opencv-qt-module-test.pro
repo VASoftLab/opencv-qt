@@ -15,4 +15,3 @@ LIBS += C:\opencv-build\bin\libopencv_imgproc455.dll
 LIBS += C:\opencv-build\bin\libopencv_features2d455.dll
 LIBS += C:\opencv-build\bin\libopencv_calib3d455.dll
 LIBS += C:\opencv-build\bin\libopencv_videoio455.dll
-
