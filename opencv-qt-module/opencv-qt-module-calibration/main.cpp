@@ -10,18 +10,18 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
-//==============================================================================
+//=============================================================================
 // Подключаем пространства имен
 using namespace std;
-//==============================================================================
+//=============================================================================
 // Глобальные константы
 #define SCREENSHOT_DELAY 3  // Интервал между скриншотам
 #define SCREENSHOT_COUNT 5  // Количество скриншотов
-#define ID_WEBCAM_LEFT 1    // ID левой web-камеры
-#define ID_WEBCAM_RIGHT 2   // ID правой web-камеры
-//==============================================================================
+#define ID_WEBCAM_LEFT 0    // ID левой web-камеры
+#define ID_WEBCAM_RIGHT 0   // ID правой web-камеры
+//=============================================================================
 // Основная программа
-//==============================================================================
+//=============================================================================
 int main()
 {
     cout << "opencv-qt-module started..." << endl;
@@ -32,15 +32,17 @@ int main()
     cv::VideoCapture captureRight; // Поток правой камеры
     cv::Mat3b frameCombined; // Комбинация кадров левая + правая
 
-    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY); // Открываем поток левой камеры
-    captureRight.open(ID_WEBCAM_RIGHT, cv::CAP_ANY); // Открываем поток правой камеры
+    // Открываем поток левой камеры
+    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
+    // Открываем поток правой камеры
+    captureRight.open(ID_WEBCAM_RIGHT, cv::CAP_ANY);
 
     //=========================================================================
     // Проверка камер
     //=========================================================================
     if (!captureLeft.isOpened())
     {
-        cerr << "ERROR! Left сamera not ready!" << endl;
+        cerr << "ERROR! Left camera not ready!" << endl;
         cin.get();
         return 1;
     }
@@ -58,12 +60,13 @@ int main()
     //=========================================================================
     // Тестовый запуск камер для позиционирования калибровочной доски
     //=========================================================================
-    cout << "Test web-camera stream started" << endl;
+    cout << "Live stream started..." << endl;
     cout << "Press [ESC] to start the calibration" << endl;
     for (;;)
     {
         captureLeft >> frameLeft; // Захвата фрейма левой камеры
         captureRight >> frameRight; // Захвата фрейма правой камеры
+
         // Создание комбинированного фрейма
         cv::hconcat(frameLeft, frameRight, frameCombined);
         // Отображение комбинированного фрейма
@@ -76,14 +79,18 @@ int main()
 
     //=========================================================================
     // Работа с папкам для выходных снимков
-    std::filesystem::path outputFolder = (".//output"); // Корневая папка
-    std::filesystem::remove_all(outputFolder); // Очистка папки
-    std::filesystem::create_directory(outputFolder); // Создание папки
-
+    std::filesystem::path folderL = (".//output//left");    // Левая камера
+    std::filesystem::path folderR = (".//output//right");   // Правая камера
+    // Очистка папок
+    std::filesystem::remove_all(folderL);
+    std::filesystem::remove_all(folderR);
+    // Создание папок
+    std::filesystem::create_directory(folderL);
+    std::filesystem::create_directory(folderR);
     //=========================================================================
     // Переменные для хронометража
-    auto startTime = std::chrono::high_resolution_clock().now(); // Начало
-    auto nowTime = std::chrono::high_resolution_clock().now(); // Конец
+    auto startTime = std::chrono::high_resolution_clock().now();    // Начало
+    auto nowTime = std::chrono::high_resolution_clock().now();      // Конец
 
     // Интервал между endTime и startTime
     auto timeInterval =
@@ -133,16 +140,19 @@ int main()
         //=====================================================================
         // Получаем текущее время и расчитываем интервал относительно старта
         nowTime = std::chrono::high_resolution_clock().now();
-        timeInterval = chrono::duration_cast<chrono::milliseconds>(nowTime - startTime);
+        timeInterval =
+                chrono::duration_cast<chrono::milliseconds>
+                (nowTime - startTime);
 
         //=====================================================================
-        // Если прошла 1 сек., то сбрасываем временную метку старта
-        // и увеличиваем счетчик на 1. Если значение счетчика == SCREENSHOT_DELAY,
-        // сбрасываем счетчик.
+        // Если прошла 1сек, то сбрасываем временную метку старта и увеличиваем
+        // счетчик на 1. Если значение счетчика == SCREENSHOT_DELAY,
+        // сбрасываем счетчик
         if (timeInterval.count() >= 1000)
         {
             startTime = nowTime;
-            timeCounter = (timeCounter == SCREENSHOT_DELAY) ? 0 : timeCounter + 1;
+            timeCounter =
+                    (timeCounter == SCREENSHOT_DELAY) ? 0 : timeCounter + 1;
         }
         //=====================================================================
         // Если настало время снятия скриншота, рисуем красный прямоугольник
@@ -157,7 +167,7 @@ int main()
             // Выводим текст
             cv::putText(
                         frameCombined, // Фрейм на который выводим текст
-                        to_string(timeCounter - SCREENSHOT_DELAY), // Текст, который выводим
+                        to_string(timeCounter - SCREENSHOT_DELAY), // Текст
                         cv::Point(5, 30), // Точка вывода текста
                         cv::FONT_HERSHEY_SCRIPT_SIMPLEX, // Шрифт
                         1, // Масштабирующий коэффициент для шрифта
@@ -166,15 +176,23 @@ int main()
                         cv::LINE_AA // Тип линии
                         );
 
-            screenshotFlagNeed = true; // Устанавливаем флаг (Нужно сделать скриншот)
+            // Устанавливаем флаг (Нужно сделать скриншот)
+            screenshotFlagNeed = true;
         }
         else
         {
             // Рисуем белый закрашенный прямоугольник
-            cv::rectangle(frameCombined, rectCountDown, cv::Scalar(255, 255, 255), cv::FILLED); // Background
+            cv::rectangle(frameCombined,
+                          rectCountDown,
+                          cv::Scalar(255, 255, 255),
+                          cv::FILLED);
             // Рисуем синюю границу вокруг прямоугольника
-            cv::rectangle(frameCombined, rectCountDown, cv::Scalar(255, 0, 0), 1); // Border
-            // Выводим метку обратного отсчета (кол-во секунд до следующего скриншота)
+            cv::rectangle(frameCombined,
+                          rectCountDown,
+                          cv::Scalar(255, 0, 0),
+                          1);
+            // Выводим метку обратного отсчета
+            // (кол-во секунд до следующего скриншота)
             cv::putText(frameCombined,
                         to_string(SCREENSHOT_DELAY - timeCounter),
                         cv::Point(5, 30), cv::FONT_HERSHEY_SCRIPT_SIMPLEX,
@@ -182,9 +200,10 @@ int main()
                         cv::Scalar(255, 0, 0),
                         1,
                         cv::LINE_AA);
-
-            screenshotFlagNeed = false; // Сбрасываем флаг необходимости сделать скриншот
-            screenshotFlagDone = false; // Сбрасываем флаг что скриншот уже сделан
+            // Сбрасываем флаг необходимости сделать скриншот
+            screenshotFlagNeed = false;
+            // Сбрасываем флаг что скриншот уже сделан
+            screenshotFlagDone = false;
         }
 
         //=====================================================================
@@ -196,22 +215,24 @@ int main()
         if (screenshotFlagNeed && (!screenshotFlagDone))
         {
             screenshotCounter++; // Инкремент счетчика скриншотов
-            std::filesystem::path fileLeft ("frameLeft_" + std::to_string(screenshotCounter) + ".jpg");
-            std::filesystem::path fileRight ("frameRigth_" + std::to_string(screenshotCounter) + ".jpg");
-            std::filesystem::path fullPathLeft = outputFolder / fileLeft; // Файл левой камеры
-            std::filesystem::path fullPathRight = outputFolder / fileRight; // Файл правой камеры
+            std::filesystem::path fileName (
+                        "frame_" + std::to_string(screenshotCounter) + ".jpg");
+            std::filesystem::path fullPathL = folderL / fileName;
+            std::filesystem::path fullPathR = folderR / fileName;
 
-            cv::imwrite(fullPathLeft.string(), frameLeft); // Сохраняем снимок левой камеры
-            cv::imwrite(fullPathRight.string(), frameRight); // Сохраняем снимок правой камеры
+            // Сохраняем снимки с камер
+            cv::imwrite(fullPathL.string(), frameLeft);
+            cv::imwrite(fullPathR.string(), frameRight);
 
             //=================================================================
             // Выводим диагностическое сообщение в консоль
             auto t = std::time(nullptr);
             auto tm = *std::localtime(&t);
-            cout << "Screenshot (" + std::to_string(screenshotCounter) + "/" +std::to_string(SCREENSHOT_COUNT) +
-                    ") made at : " << std::put_time(&tm, "%H:%M:%S") << std::endl;
-
-            screenshotFlagDone = true; // Установка флага (Для текущего номера скриншот уже сделан)
+            cout << "Screenshot (" + std::to_string(screenshotCounter) +
+                    "/" + std::to_string(SCREENSHOT_COUNT) + ") made at : "
+                 << std::put_time(&tm, "%H:%M:%S") << std::endl;
+            // Установка флага (Для текущего номера скриншот уже сделан)
+            screenshotFlagDone = true;
         }
 
         //=====================================================================

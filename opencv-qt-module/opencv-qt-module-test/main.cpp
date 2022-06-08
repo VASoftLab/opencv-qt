@@ -22,7 +22,7 @@ int main()
     cv::Mat clearFrame;
     cv::VideoCapture capture;
 
-    int deviceID = 1; // Default Camera
+    int deviceID = 0; // Default Camera
     int apiID = cv::CAP_ANY;
     capture.open(deviceID, apiID);
 
@@ -115,7 +115,7 @@ int main()
         if (screenshotCounter >= SCREENSHOT_COUNT)
             break;
 
-        if (cv::waitKey(5) >= 0)
+        if (cv::waitKey(20) >= 0)
             break;
     }
     //==========================================================================
