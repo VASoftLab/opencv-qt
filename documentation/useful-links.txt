@@ -1,2 +1,17 @@
 Create calibration pattern -- Шахматная доска для калибровки
 https://docs.opencv.org/4.x/da/d0d/tutorial_camera_calibration_pattern.html
+
+Camera calibration With OpenCV -- Алгоритм калибровки
+https://docs.opencv.org/4.x/d4/d94/tutorial_camera_calibration.html
+
+How to Perform Camera Calibration Using OpenCV
+https://automaticaddison.com/how-to-perform-camera-calibration-using-opencv/
+
+Tutorial: Camera calibration
+https://visp-doc.inria.fr/doxygen/visp-2.9.0/tutorial-calibration.html
+
+Русскоязычные источники
+Калибровка камеры с использованием с OpenCV
+https://waksoft.susu.ru/2020/02/29/kalibrovka-kamery-s-ispolzovaniem-s-opencv/
+
+
