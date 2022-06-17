@@ -33,7 +33,8 @@ int main()
 
     auto startTime = std::chrono::high_resolution_clock().now();
     auto nowTime = std::chrono::high_resolution_clock().now();
-    auto timeInterval = chrono::duration_cast<chrono::milliseconds>(nowTime - startTime);
+    auto timeInterval =
+            chrono::duration_cast<chrono::milliseconds>(nowTime - startTime);
 
     int counter = 0;
     int screenshotCounter = 0;
@@ -66,7 +67,8 @@ int main()
         //=====================================================================
         // Time calculation
         nowTime = std::chrono::high_resolution_clock().now();
-        timeInterval = chrono::duration_cast<chrono::milliseconds>(nowTime - startTime);
+        timeInterval =
+                chrono::duration_cast<chrono::milliseconds>(nowTime - startTime);
 
         if (timeInterval.count() >= 1000)
         {
@@ -79,15 +81,30 @@ int main()
         if (TIME_DELAY - counter == 0)
         {
             cv::rectangle(frame, rect, cv::Scalar(0, 0, 255), cv::FILLED);
-            cv::putText(frame, to_string(TIME_DELAY - counter), cv::Point(5, 30), cv::FONT_HERSHEY_SCRIPT_SIMPLEX, 1, cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
+            cv::putText(frame,
+                        to_string(TIME_DELAY - counter),
+                        cv::Point(5, 30),
+                        cv::FONT_HERSHEY_SCRIPT_SIMPLEX,
+                        1,
+                        cv::Scalar(0, 0, 255),
+                        1,
+                        cv::LINE_AA);
 
             screenshotFlagNeed = true;
         }
         else
         {
-            cv::rectangle(frame, rect, cv::Scalar(255, 255, 255), cv::FILLED); // Background
+            // Background
+            cv::rectangle(frame, rect, cv::Scalar(255, 255, 255), cv::FILLED);
             cv::rectangle(frame, rect, cv::Scalar(255, 0, 0), 1); // Border
-            cv::putText(frame, to_string(TIME_DELAY - counter), cv::Point(5, 30), cv::FONT_HERSHEY_SCRIPT_SIMPLEX, 1, cv::Scalar(255, 0, 0), 1, cv::LINE_AA);
+            cv::putText(frame,
+                        to_string(TIME_DELAY - counter),
+                        cv::Point(5, 30),
+                        cv::FONT_HERSHEY_SCRIPT_SIMPLEX,
+                        1,
+                        cv::Scalar(255, 0, 0),
+                        1,
+                        cv::LINE_AA);
 
             screenshotFlagNeed = false;
             screenshotFlagDone = false;
@@ -100,15 +117,21 @@ int main()
         // Make a screenshot
         if (screenshotFlagNeed && (!screenshotFlagDone))
         {
-            std::filesystem::path file ("frame_" + std::to_string(++screenshotCounter) + ".jpg");
+            std::filesystem::path file ("frame_" +
+                                        std::to_string(++screenshotCounter) +
+                                        ".jpg");
             std::filesystem::path fullPath = outputFolder / file;
             cv::imwrite(fullPath.string(), clearFrame);
 
             auto t = std::time(nullptr);
             auto tm = *std::localtime(&t);
-            cout << "Screenshot (" + std::to_string(screenshotCounter) + "/" + std::to_string(SCREENSHOT_COUNT) + ") made at : " << std::put_time(&tm, "%H:%M:%S") << std::endl;
+            cout << "Screenshot (" +
+                    std::to_string(screenshotCounter) +
+                    "/" + std::to_string(SCREENSHOT_COUNT) +
+                    ") made at : " << std::put_time(&tm, "%H:%M:%S")
+                 << std::endl;
 
-            screenshotFlagNeed = false;
+            // screenshotFlagNeed = false;
             screenshotFlagDone = true;
         }
 
@@ -131,7 +154,8 @@ int openCVactions()
     //==========================================================================
     // OpenCV Image Read
     //==========================================================================
-    cv::Mat image = cv::imread("..\\..\\opencv-qt-module\\opencv-qt-module-test\\images\\OpenCV.png");
+    cv::Mat image =
+            cv::imread("..\\..\\opencv-qt-module\\opencv-qt-module-test\\images\\OpenCV.png");
 
     if (image.data)
     {
