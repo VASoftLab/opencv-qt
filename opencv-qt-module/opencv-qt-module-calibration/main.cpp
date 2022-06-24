@@ -18,14 +18,15 @@ using namespace std;
 #define SCREENSHOT_DELAY 3  // Интервал между скриншотам
 #define SCREENSHOT_COUNT 5  // Количество скриншотов
 #define ID_WEBCAM_LEFT 0    // ID левой web-камеры
-#define ID_WEBCAM_RIGHT 0   // ID правой web-камеры
+#define ID_WEBCAM_RIGHT 1   // ID правой web-камеры
+#define CAMERA_TEST_SUCCESS -1 // Код успешного завершения теста камер
 //=============================================================================
-// Основная программа
+// Модуль теста камер
+// Функция возвращает ID нерабочей камеры
+// Если тест пройдет - возвращаем -1
 //=============================================================================
-int main()
+int performCameraTest()
 {
-    cout << "opencv-qt-module started..." << endl;
-
     cv::Mat3b frameLeft; // Снимок с левой камеры
     cv::VideoCapture captureLeft; // Поток левой камеры
     cv::Mat3b frameRight; // Снимок с правой камеры
@@ -44,7 +45,7 @@ int main()
     {
         cerr << "ERROR! Left camera not ready!" << endl;
         cin.get();
-        return 1;
+        return ID_WEBCAM_LEFT;
     }
     else
         cout << "LEFT camera test -- SUCCESS" << endl;
@@ -53,15 +54,34 @@ int main()
     {
         cerr << "ERROR! Right сamera not ready!" << endl;
         cin.get();
-        return 1;
+        return ID_WEBCAM_RIGHT;
     }
     else
         cout << "RIGHT camera test -- SUCCESS" << endl;
+
+    return CAMERA_TEST_SUCCESS; // Код успешного теста
+}
+//=============================================================================
+// Модуль сбора изображений
+//=============================================================================
+void collectImagesForCalibration()
+{
+    cv::Mat3b frameLeft; // Снимок с левой камеры
+    cv::VideoCapture captureLeft; // Поток левой камеры
+    cv::Mat3b frameRight; // Снимок с правой камеры
+    cv::VideoCapture captureRight; // Поток правой камеры
+    cv::Mat3b frameCombined; // Комбинация кадров левая + правая
+
+    // Открываем поток левой камеры
+    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
+    // Открываем поток правой камеры
+    captureRight.open(ID_WEBCAM_RIGHT, cv::CAP_ANY);
+
     //=========================================================================
     // Тестовый запуск камер для позиционирования калибровочной доски
     //=========================================================================
-    cout << "Live stream started..." << endl;
-    cout << "Press [ESC] to start the calibration" << endl;
+    cout << "Set the calibration board inside the frame" << endl;
+    cout << "Press [ESC] to start an image collection process" << endl;
     for (;;)
     {
         captureLeft >> frameLeft; // Захвата фрейма левой камеры
@@ -72,15 +92,15 @@ int main()
         // Отображение комбинированного фрейма
         cv::imshow("WebCamCombined", frameCombined);
 
-        if (cv::waitKey(5) >= 0)
+        if (cv::waitKey(5) == 27)
             break;
     }
     cv::destroyAllWindows();
 
     //=========================================================================
     // Работа с папкам для выходных снимков
-    std::filesystem::path folderL = (".//output//left");    // Левая камера
-    std::filesystem::path folderR = (".//output//right");   // Правая камера
+    std::filesystem::path folderL = ("./output/left");    // Левая камера
+    std::filesystem::path folderR = ("./output/right");   // Правая камера
     // Очистка папок
     std::filesystem::remove_all(folderL);
     std::filesystem::remove_all(folderR);
@@ -113,6 +133,7 @@ int main()
     // Прямоугольник обратного отсчета
     cv::Rect rectCountDown(rectX, rectY, rectW, rectH);
 
+    cout << "The image collection process started..." << endl;
     //=========================================================================
     // Создание тестовых снимков для калибровки камер
     //=========================================================================
@@ -244,8 +265,22 @@ int main()
             break;
     }
     cv::destroyAllWindows();
+}
+//=============================================================================
+// Основная программа
+//=============================================================================
+int main()
+{
+    cout << "opencv-qt-module-calibration started..." << endl;
 
-    cout << "Press any key to exit..." << endl;
+    // Тест работоспособности камер
+    int testResult = performCameraTest();
+
+    // Если тест пройден, собираем изображения
+    if (testResult == CAMERA_TEST_SUCCESS)
+        collectImagesForCalibration();
+
+    cout << "Press [ENTER] to exit..." << endl;
     cin.get();
 
     return 0;
