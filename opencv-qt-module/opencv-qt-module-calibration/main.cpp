@@ -18,7 +18,7 @@ using namespace std;
 #define SCREENSHOT_DELAY 3  // Интервал между скриншотам
 #define SCREENSHOT_COUNT 5  // Количество скриншотов
 #define ID_WEBCAM_LEFT 0    // ID левой web-камеры
-#define ID_WEBCAM_RIGHT 1   // ID правой web-камеры
+#define ID_WEBCAM_RIGHT 0   // ID правой web-камеры
 #define CAMERA_TEST_SUCCESS -1 // Код успешного завершения теста камер
 //=============================================================================
 // Модуль теста камер
@@ -71,6 +71,7 @@ void collectImagesForCalibration()
     cv::Mat3b frameRight; // Снимок с правой камеры
     cv::VideoCapture captureRight; // Поток правой камеры
     cv::Mat3b frameCombined; // Комбинация кадров левая + правая
+    cv::Mat3b framePairs; // Склейка камер без счетчика
 
     // Открываем поток левой камеры
     captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
@@ -101,12 +102,15 @@ void collectImagesForCalibration()
     // Работа с папкам для выходных снимков
     std::filesystem::path folderL = ("./output/left");    // Левая камера
     std::filesystem::path folderR = ("./output/right");   // Правая камера
+    std::filesystem::path folderP = ("./output/pairs");   // Склейка камер
     // Очистка папок
     std::filesystem::remove_all(folderL);
     std::filesystem::remove_all(folderR);
+    std::filesystem::remove_all(folderP);
     // Создание папок
     std::filesystem::create_directory(folderL);
     std::filesystem::create_directory(folderR);
+    std::filesystem::create_directory(folderP);
     //=========================================================================
     // Переменные для хронометража
     auto startTime = std::chrono::high_resolution_clock().now();    // Начало
@@ -157,6 +161,8 @@ void collectImagesForCalibration()
 
         // Создание комбинированного фрейма
         cv::hconcat(frameLeft, frameRight, frameCombined);
+        // Создаем копию для сохранения в файл
+        framePairs = frameCombined.clone();
 
         //=====================================================================
         // Получаем текущее время и расчитываем интервал относительно старта
@@ -240,10 +246,12 @@ void collectImagesForCalibration()
                         "frame_" + std::to_string(screenshotCounter) + ".jpg");
             std::filesystem::path fullPathL = folderL / fileName;
             std::filesystem::path fullPathR = folderR / fileName;
+            std::filesystem::path fullPathP = folderP / fileName;
 
             // Сохраняем снимки с камер
             cv::imwrite(fullPathL.string(), frameLeft);
             cv::imwrite(fullPathR.string(), frameRight);
+            cv::imwrite(fullPathP.string(), framePairs);
 
             //=================================================================
             // Выводим диагностическое сообщение в консоль
