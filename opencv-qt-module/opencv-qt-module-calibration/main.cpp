@@ -18,7 +18,7 @@ using namespace std;
 #define SCREENSHOT_DELAY 3  // Интервал между скриншотам
 #define SCREENSHOT_COUNT 5  // Количество скриншотов
 #define ID_WEBCAM_LEFT 0    // ID левой web-камеры
-#define ID_WEBCAM_RIGHT 0   // ID правой web-камеры
+#define ID_WEBCAM_RIGHT 1   // ID правой web-камеры
 #define CAMERA_TEST_SUCCESS -1 // Код успешного завершения теста камер
 //=============================================================================
 // Модуль теста камер
@@ -52,7 +52,7 @@ int performCameraTest()
 
     if (!captureRight.isOpened())
     {
-        cerr << "ERROR! Right сamera not ready!" << endl;
+        cerr << "ERROR! Right camera not ready!" << endl;
         cin.get();
         return ID_WEBCAM_RIGHT;
     }
@@ -273,6 +273,13 @@ void collectImagesForCalibration()
             break;
     }
     cv::destroyAllWindows();
+}
+//=============================================================================
+// Модуль калибровки камеры
+//=============================================================================
+void cameraCalibration()
+{
+
 }
 //=============================================================================
 // Основная программа

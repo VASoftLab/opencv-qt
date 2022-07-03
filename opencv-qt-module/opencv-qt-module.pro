@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
+    opencv-qt-crossplatform \
     opencv-qt-module-calibration \
     opencv-qt-module-test
 
