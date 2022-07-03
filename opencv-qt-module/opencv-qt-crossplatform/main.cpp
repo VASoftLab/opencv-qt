@@ -8,12 +8,12 @@
 #define SCREEN_WIDTH    1600
 #define SCREEN_HEIGHT   1200
 
-#define ID_WEBCAM_LEFT  0       // ID левой web-камеры
+#define ID_WEBCAM_LEFT  1       // ID левой web-камеры
 #define ID_WEBCAM_RIGHT 0       // ID правой web-камеры
 
 // ============================================================================
 // Раcкомментировать, если запуск под Linux
-// #define IS_LINUX
+#define IS_LINUX
 // ============================================================================
 
 using namespace std;
@@ -23,12 +23,15 @@ int main()
 {
     cout << "Institution of Mechanical Engineers..." << endl;
     const cv::String winName = "Aerospace Engeneering";
-#ifdef IS_LINUX
-    const cv::String filName = "/home/va/Pictures/aerospace.jpg";
-#else
+
     std::filesystem::path pathToImg = std::filesystem::current_path().parent_path().parent_path();
     pathToImg.append("images");
     const cv::String filName = (pathToImg / "aerospace.jpg").string();
+
+#ifdef IS_LINUX
+    // Code relatred to Linux
+#else
+    // Code relatred to Wiindows
 #endif
 
     cv::Mat imgAero = cv::imread(filName, cv::IMREAD_COLOR);
@@ -40,7 +43,6 @@ int main()
     cv::imshow(winName, imgAero);
     cv::waitKey(0);
     cv::destroyAllWindows();
-
 
     // ========================================================================
     // Camera test

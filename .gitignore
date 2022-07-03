@@ -3,3 +3,5 @@ build-opencv-qt-module-Desktop_Qt_6_3_0_MinGW_64_bit-Release/
 opencv-qt-module/opencv-qt-module.pro.user
 build-opencv-qt-module-Desktop_Qt_6_2_4_MinGW_64_bit-Debug/
 build-opencv-qt-module-Desktop_Qt_6_3_0_MinGW_64_bit-Profile/
+
+build-opencv-qt-module-Desktop_Qt_6_3_1_GCC_64bit-Debug/
