@@ -8,7 +8,7 @@
 #define SCREEN_WIDTH    1600
 #define SCREEN_HEIGHT   1200
 
-#define ID_WEBCAM_LEFT  1       // ID левой web-камеры
+#define ID_WEBCAM_LEFT  0       // ID левой web-камеры
 #define ID_WEBCAM_RIGHT 0       // ID правой web-камеры
 
 // ============================================================================
@@ -48,7 +48,8 @@ int main()
     // Camera test
     // ========================================================================
     cv::VideoCapture captureLeft;
-    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
+    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_GSTREAMER);
+    captureLeft.set(cv::CAP_PROP_FPS, 30);
 
     if (!captureLeft.isOpened())
     {

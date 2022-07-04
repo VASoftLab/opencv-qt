@@ -34,9 +34,11 @@ int performCameraTest()
     cv::Mat3b frameCombined; // Комбинация кадров левая + правая
 
     // Открываем поток левой камеры
-    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
+    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_GSTREAMER);
+    captureLeft.set(cv::CAP_PROP_FPS, 30);
     // Открываем поток правой камеры
-    captureRight.open(ID_WEBCAM_RIGHT, cv::CAP_ANY);
+    captureRight.open(ID_WEBCAM_RIGHT, cv::CAP_GSTREAMER);
+    captureRight.set(cv::CAP_PROP_FPS, 30);
 
     //=========================================================================
     // Проверка камер
@@ -75,8 +77,10 @@ void collectImagesForCalibration()
 
     // Открываем поток левой камеры
     captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
+    captureLeft.set(cv::CAP_PROP_FPS, 30);
     // Открываем поток правой камеры
     captureRight.open(ID_WEBCAM_RIGHT, cv::CAP_ANY);
+    captureRight.set(cv::CAP_PROP_FPS, 30);
 
     //=========================================================================
     // Тестовый запуск камер для позиционирования калибровочной доски

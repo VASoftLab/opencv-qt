@@ -8,7 +8,7 @@
 using namespace std;
 
 #define TIME_DELAY 3
-#define SCREENSHOT_COUNT 10
+#define SCREENSHOT_COUNT 3
 
 int main()
 {
