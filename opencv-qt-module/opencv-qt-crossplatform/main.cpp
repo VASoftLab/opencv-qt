@@ -13,7 +13,7 @@
 
 // ============================================================================
 // Раcкомментировать, если запуск под Linux
-#define IS_LINUX
+// #define IS_LINUX
 // ============================================================================
 
 using namespace std;
@@ -27,12 +27,6 @@ int main()
     std::filesystem::path pathToImg = std::filesystem::current_path().parent_path().parent_path();
     pathToImg.append("images");
     const cv::String filName = (pathToImg / "aerospace.jpg").string();
-
-#ifdef IS_LINUX
-    // Code relatred to Linux
-#else
-    // Code relatred to Wiindows
-#endif
 
     cv::Mat imgAero = cv::imread(filName, cv::IMREAD_COLOR);
     cv::namedWindow(winName, cv::WINDOW_NORMAL);
@@ -48,7 +42,12 @@ int main()
     // Camera test
     // ========================================================================
     cv::VideoCapture captureLeft;
+#ifdef IS_LINUX
     captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_GSTREAMER);
+#else
+    captureLeft.open(ID_WEBCAM_LEFT, cv::CAP_ANY);
+#endif
+
     captureLeft.set(cv::CAP_PROP_FPS, 30);
 
     if (!captureLeft.isOpened())
