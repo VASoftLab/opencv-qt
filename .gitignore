@@ -9,3 +9,5 @@ build-opencv-qt-module-Desktop_Qt_6_3_1_GCC_64bit-Debug/
 build-opencv-qt-module-Desktop_Qt_6_3_1_GCC_64bit-Profile/
 
 build-opencv-qt-module-Desktop_Qt_6_3_1_GCC_64bit-Release/
+
+output/

@@ -13,19 +13,23 @@
 //=============================================================================
 // Подключаем пространства имен
 using namespace std;
+namespace fs = std::filesystem;
 //=============================================================================
 // Глобальные константы
 #define SCREENSHOT_DELAY 3  // Интервал между скриншотам
 #define SCREENSHOT_COUNT 5  // Количество скриншотов
-#define ID_WEBCAM_LEFT 0    // ID левой web-камеры
-#define ID_WEBCAM_RIGHT 1   // ID правой web-камеры
+#define ID_WEBCAM_LEFT 2    // ID левой web-камеры
+#define ID_WEBCAM_RIGHT 4   // ID правой web-камеры
 #define CAMERA_TEST_SUCCESS -1 // Код успешного завершения теста камер
+
+#define SCREEN_WIDTH    1366
+#define SCREEN_HEIGHT   768
 //=============================================================================
 // Модуль теста камер
 // Функция возвращает ID нерабочей камеры
 // Если тест пройдет - возвращаем -1
 //=============================================================================
-int performCameraTest()
+int cameraTest()
 {
     cv::Mat3b frameLeft; // Снимок с левой камеры
     cv::VideoCapture captureLeft; // Поток левой камеры
@@ -46,6 +50,7 @@ int performCameraTest()
     if (!captureLeft.isOpened())
     {
         cerr << "ERROR! Left camera not ready!" << endl;
+        cout << "CAMERA TEST FAILED!";
         cin.get();
         return ID_WEBCAM_LEFT;
     }
@@ -55,18 +60,21 @@ int performCameraTest()
     if (!captureRight.isOpened())
     {
         cerr << "ERROR! Right camera not ready!" << endl;
+        cout << "CAMERA TEST FAILED!";
         cin.get();
         return ID_WEBCAM_RIGHT;
     }
     else
         cout << "RIGHT camera test -- SUCCESS" << endl;
 
+    cout << "CAMERA TEST SUCCESSED!" << endl << endl;
+
     return CAMERA_TEST_SUCCESS; // Код успешного теста
 }
 //=============================================================================
 // Модуль сбора изображений
 //=============================================================================
-void collectImagesForCalibration()
+void collectImages()
 {
     cv::Mat3b frameLeft; // Снимок с левой камеры
     cv::VideoCapture captureLeft; // Поток левой камеры
@@ -94,8 +102,13 @@ void collectImagesForCalibration()
 
         // Создание комбинированного фрейма
         cv::hconcat(frameLeft, frameRight, frameCombined);
+
         // Отображение комбинированного фрейма
-        cv::imshow("WebCamCombined", frameCombined);
+        auto winName = "WebCamCombined";
+        cv::moveWindow(winName,
+                       (SCREEN_WIDTH - frameCombined.size().width) / 2,
+                       (SCREEN_HEIGHT - frameCombined.size().height) / 2);
+        cv::imshow(winName, frameCombined);
 
         if (cv::waitKey(5) == 27)
             break;
@@ -104,21 +117,29 @@ void collectImagesForCalibration()
 
     //=========================================================================
     // Работа с папкам для выходных снимков
-    std::filesystem::path folderL = ("./output/left");    // Левая камера
-    std::filesystem::path folderR = ("./output/right");   // Правая камера
-    std::filesystem::path folderP = ("./output/pairs");   // Склейка камер
+    fs::path folderParent = fs::current_path();
+    fs::path folderA = folderParent.parent_path().parent_path();
+
+    fs::path folderL = (folderA / "output/left");    // Левая камера
+    fs::path folderR = (folderA / "output/right");   // Правая камера
+    fs::path folderP = (folderA / "output/pairs");   // Склейка камер
+
+    cout << folderL << endl;
+    cout << folderR << endl;
+    cout << folderP << endl;
+
     // Очистка папок
-    std::filesystem::remove_all(folderL);
-    std::filesystem::remove_all(folderR);
-    std::filesystem::remove_all(folderP);
+    fs::remove_all(folderL);
+    fs::remove_all(folderR);
+    fs::remove_all(folderP);
     // Создание папок
-    std::filesystem::create_directory(folderL);
-    std::filesystem::create_directory(folderR);
-    std::filesystem::create_directory(folderP);
+    fs::create_directories(folderL);
+    fs::create_directories(folderR);
+    fs::create_directories(folderP);
     //=========================================================================
     // Переменные для хронометража
-    auto startTime = std::chrono::high_resolution_clock().now();    // Начало
-    auto nowTime = std::chrono::high_resolution_clock().now();      // Конец
+    auto startTime = chrono::high_resolution_clock().now();    // Начало
+    auto nowTime = chrono::high_resolution_clock().now();      // Конец
 
     // Интервал между endTime и startTime
     auto timeInterval =
@@ -137,6 +158,8 @@ void collectImagesForCalibration()
     int rectY = 0; // Координата Y левого верхнего угла
     int rectW = 30; // Ширина прямоугольника
     int rectH = 40; // Высота прямоугольника
+
+    rectX = frameCombined.size().width / 2 - rectW / 2;
 
     // Прямоугольник обратного отсчета
     cv::Rect rectCountDown(rectX, rectY, rectW, rectH);
@@ -170,7 +193,7 @@ void collectImagesForCalibration()
 
         //=====================================================================
         // Получаем текущее время и расчитываем интервал относительно старта
-        nowTime = std::chrono::high_resolution_clock().now();
+        nowTime = chrono::high_resolution_clock().now();
         timeInterval =
                 chrono::duration_cast<chrono::milliseconds>
                 (nowTime - startTime);
@@ -199,7 +222,7 @@ void collectImagesForCalibration()
             cv::putText(
                         frameCombined, // Фрейм на который выводим текст
                         to_string(timeCounter - SCREENSHOT_DELAY), // Текст
-                        cv::Point(5, 30), // Точка вывода текста
+                        cv::Point(rectX + 5, 30), // Точка вывода текста
                         cv::FONT_HERSHEY_SCRIPT_SIMPLEX, // Шрифт
                         1, // Масштабирующий коэффициент для шрифта
                         cv::Scalar(0, 0, 255),
@@ -226,7 +249,7 @@ void collectImagesForCalibration()
             // (кол-во секунд до следующего скриншота)
             cv::putText(frameCombined,
                         to_string(SCREENSHOT_DELAY - timeCounter),
-                        cv::Point(5, 30), cv::FONT_HERSHEY_SCRIPT_SIMPLEX,
+                        cv::Point(rectX + 5, 30), cv::FONT_HERSHEY_SCRIPT_SIMPLEX,
                         1,
                         cv::Scalar(255, 0, 0),
                         1,
@@ -239,6 +262,10 @@ void collectImagesForCalibration()
 
         //=====================================================================
         // Отображаем комбинированный скриншот (левая + правая)
+        auto winName = "LiveCamera";
+        cv::moveWindow(winName,
+                       (SCREEN_WIDTH - frameCombined.size().width) / 2,
+                       (SCREEN_HEIGHT - frameCombined.size().height) / 2);
         cv::imshow("LiveCamera", frameCombined);
 
         //=====================================================================
@@ -246,11 +273,11 @@ void collectImagesForCalibration()
         if (screenshotFlagNeed && (!screenshotFlagDone))
         {
             screenshotCounter++; // Инкремент счетчика скриншотов
-            std::filesystem::path fileName (
+            fs::path fileName (
                         "frame_" + std::to_string(screenshotCounter) + ".jpg");
-            std::filesystem::path fullPathL = folderL / fileName;
-            std::filesystem::path fullPathR = folderR / fileName;
-            std::filesystem::path fullPathP = folderP / fileName;
+            fs::path fullPathL = folderL / fileName;
+            fs::path fullPathR = folderR / fileName;
+            fs::path fullPathP = folderP / fileName;
 
             // Сохраняем снимки с камер
             cv::imwrite(fullPathL.string(), frameLeft);
@@ -290,17 +317,47 @@ void cameraCalibration()
 //=============================================================================
 int main()
 {
+    int modeCode = -1;
     cout << "opencv-qt-module-calibration started..." << endl;
+    cout << endl;
+
+    while (1)
+    {
+        cout << ">>> SELECT MODE >>>" << endl;
+        cout << "1:\t CAMERA TEST" << endl;
+        cout << "2:\t COLLECT IMAGES" << endl;
+        cout << "3:\t CAMERA CALIBRATION" << endl;
+        cout << "0:\t EXIT" << endl;
+        cout << "YOUR CHOOSE: ";
+
+        cin >> modeCode;
+
+        switch (modeCode) {
+        case 1:
+            cameraTest();
+            break;
+        case 2:
+            collectImages();
+            break;
+        case 3:
+            cameraCalibration();
+            break;
+        case 0:
+            return 0;
+            break;
+        default:
+            return 0;
+            break;
+        }
+    }
 
     // Тест работоспособности камер
-    int testResult = performCameraTest();
-
+    //int testResult = cameraTest();
     // Если тест пройден, собираем изображения
-    if (testResult == CAMERA_TEST_SUCCESS)
-        collectImagesForCalibration();
-
-    cout << "Press [ENTER] to exit..." << endl;
-    cin.get();
+    //if (testResult == CAMERA_TEST_SUCCESS)
+    //    collectImages();
+    //cout << "Press [ENTER] to exit..." << endl;
+    //cin.get();
 
     return 0;
 }
