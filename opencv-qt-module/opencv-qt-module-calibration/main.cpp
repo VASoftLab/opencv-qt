@@ -18,8 +18,8 @@ namespace fs = std::filesystem;
 // Глобальные константы
 #define SCREENSHOT_DELAY 3  // Интервал между скриншотам
 #define SCREENSHOT_COUNT 5  // Количество скриншотов
-#define ID_WEBCAM_LEFT 2    // ID левой web-камеры
-#define ID_WEBCAM_RIGHT 4   // ID правой web-камеры
+#define ID_WEBCAM_LEFT 0    // ID левой web-камеры
+#define ID_WEBCAM_RIGHT 0   // ID правой web-камеры
 #define CAMERA_TEST_SUCCESS -1 // Код успешного завершения теста камер
 
 #define SCREEN_WIDTH    1366
@@ -105,10 +105,10 @@ void collectImages()
 
         // Отображение комбинированного фрейма
         auto winName = "WebCamCombined";
+        cv::imshow(winName, frameCombined);
         cv::moveWindow(winName,
                        (SCREEN_WIDTH - frameCombined.size().width) / 2,
                        (SCREEN_HEIGHT - frameCombined.size().height) / 2);
-        cv::imshow(winName, frameCombined);
 
         if (cv::waitKey(5) == 27)
             break;
@@ -120,9 +120,9 @@ void collectImages()
     fs::path folderParent = fs::current_path();
     fs::path folderA = folderParent.parent_path().parent_path();
 
-    fs::path folderL = (folderA / "output/left");    // Левая камера
-    fs::path folderR = (folderA / "output/right");   // Правая камера
-    fs::path folderP = (folderA / "output/pairs");   // Склейка камер
+    fs::path folderL = (folderA / "output\\left");    // Левая камера
+    fs::path folderR = (folderA / "output\\right");   // Правая камера
+    fs::path folderP = (folderA / "output\\pairs");   // Склейка камер
 
     cout << folderL << endl;
     cout << folderR << endl;
@@ -263,11 +263,10 @@ void collectImages()
         //=====================================================================
         // Отображаем комбинированный скриншот (левая + правая)
         auto winName = "LiveCamera";
+        cv::imshow(winName, frameCombined);
         cv::moveWindow(winName,
                        (SCREEN_WIDTH - frameCombined.size().width) / 2,
                        (SCREEN_HEIGHT - frameCombined.size().height) / 2);
-        cv::imshow("LiveCamera", frameCombined);
-
         //=====================================================================
         // Сохраняем скриншот левой и правой камеры на диске
         if (screenshotFlagNeed && (!screenshotFlagDone))
@@ -328,7 +327,7 @@ int main()
         cout << "2:\t COLLECT IMAGES" << endl;
         cout << "3:\t CAMERA CALIBRATION" << endl;
         cout << "0:\t EXIT" << endl;
-        cout << "YOUR CHOOSE: ";
+        cout << "YOUR CHOICE: ";
 
         cin >> modeCode;
 
