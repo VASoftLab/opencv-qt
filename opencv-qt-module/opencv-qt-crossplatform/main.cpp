@@ -5,8 +5,8 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 
-#define SCREEN_WIDTH    1600
-#define SCREEN_HEIGHT   1200
+#define SCREEN_WIDTH    1366
+#define SCREEN_HEIGHT   768
 
 #define ID_WEBCAM_LEFT  0       // ID левой web-камеры
 #define ID_WEBCAM_RIGHT 0       // ID правой web-камеры
