@@ -186,7 +186,7 @@ void FishEyeCalibration::cameraCalibration()
     {
         auto start = chrono::steady_clock::now();
 
-        cout << "Pair No " << screenshotCounter << " proceccing: ";
+        cout << "Pair No " << std::setw(2) << std::setfill('0') << screenshotCounter << " proceccing: ";
 
         fs::path fileName (
                     "frame_" + std::to_string(screenshotCounter) + ".jpg");

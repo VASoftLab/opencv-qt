@@ -10,6 +10,7 @@
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 //=============================================================================
 #include "Constants.h"
 #include "FishEyeCalibration.h"
@@ -19,6 +20,15 @@ using namespace std;
 namespace fs = std::filesystem;
 //=============================================================================
 
+cv::Mat imgLeft;
+cv::Mat imgRight;
+cv::Mat disp;
+cv::Mat disparity;
+
+int numDisparity = 8;
+int blockSize = 5;
+
+cv::Ptr<cv::StereoSGBM> sbm = cv::StereoSGBM::create();
 
 //=============================================================================
 // Модуль теста камер
@@ -325,6 +335,101 @@ void clearConsole()
 #endif
 }
 //=============================================================================
+// Построение карты диспарантности
+//=============================================================================
+static void trackbar1(int , void* )
+{
+    sbm->setNumDisparities(numDisparity * 16);
+    numDisparity = numDisparity * 16;
+    sbm->compute(imgLeft, imgRight, disp);
+    disp.convertTo(disparity, CV_8U);
+    cv::applyColorMap(disparity, disparity, cv::COLORMAP_JET);
+    cv::imshow("Disparity", disparity);
+}
+
+static void trackbar2(int , void* )
+{
+    sbm->setBlockSize(blockSize);
+    blockSize = blockSize;
+    sbm->compute(imgLeft,imgRight, disp);
+    disp.convertTo(disparity, CV_8U);
+    cv::applyColorMap(disparity, disparity, cv::COLORMAP_JET);
+    cv::imshow("Disparity", disparity);
+}
+
+void disparityMap()
+{
+    //imgLeft = cv::imread("D:\\TEMP\\imgLeft.png");
+    //imgRight = cv::imread("D:\\TEMP\\imgRight.png");
+
+    imgLeft = cv::imread("D:\\TEMP\\ambush_5_left.jpg");
+    imgRight = cv::imread("D:\\TEMP\\ambush_5_right.jpg");
+
+    //int numDisparity = 18;
+    //int blockSize = 50;
+
+
+
+    //sbm->setNumDisparities(numDisparity * 16);
+    //sbm->setBlockSize(blockSize);
+
+//    cv::Ptr<cv::StereoSGBM> sbm = cv::StereoSGBM::create(
+//                -3,     // int minDisparity
+//                96,     // int numDisparities
+//                7,      // int SADWindowSize
+//                60,     // int P1 = 0
+//                2400,   // int P2 = 0
+//                90,     // int disp12MaxDiff = 0
+//                16,     // int preFilterCap = 0
+//                1,      // int uniquenessRatio = 0
+//                60,     // int speckleWindowSize = 0
+//                20,     // int speckleRange = 0
+//                true);  // bool fullDP = false
+
+    //sbm->compute(imgLeft, imgRight, dispMap);
+
+    //dispMap.convertTo(disparity, CV_8U);
+    //cv::applyColorMap(disparity, disparity, cv::COLORMAP_JET);
+    //cv::imshow("Disparity", disparity);
+
+    cv::namedWindow("Disparity");
+    cv::createTrackbar("numDisparities", "Disparity", &numDisparity, 18, trackbar1);
+    cv::createTrackbar("blockSize", "Disparity", &blockSize, 50, trackbar2);
+
+    cv::waitKey();
+    cv::destroyAllWindows();
+
+
+
+//    //cv::Mat imgLeft;
+//    //cv::Mat imgRight;
+//    cv::Mat greyLeft;
+//    cv::Mat greyRight;
+
+//    cv::Mat disp;
+//    cv::Mat disp8;
+
+
+
+//    cv::cvtColor(imgLeft, greyLeft, cv::COLOR_BGR2GRAY);
+//    cv::cvtColor(imgRight, greyRight, cv::COLOR_BGR2GRAY);
+
+//    cv::Mat imgDisparity16S = cv::Mat( imgLeft.rows, imgLeft.cols, CV_16S );
+//    cv::Mat imgDisparity8U = cv::Mat( imgLeft.rows, imgLeft.cols, CV_8UC1 );
+
+//    double minVal;
+//    double maxVal;
+
+//    cv::minMaxLoc( imgDisparity16S, &minVal, &maxVal );
+//    printf("Min disp: %f Max value: %f \n", minVal, maxVal);
+
+//    imgDisparity16S.convertTo( imgDisparity8U, CV_8UC1, 255/(maxVal - minVal));
+//    cv::namedWindow( "Disparity", cv::WINDOW_NORMAL );
+//    cv::imshow( "Disparity", imgDisparity8U );
+
+
+}
+//=============================================================================
 // Основная программа
 //=============================================================================
 int main()
@@ -339,6 +444,7 @@ int main()
         cout << "1:\t CAMERA TEST" << endl;
         cout << "2:\t COLLECT IMAGES" << endl;
         cout << "3:\t CAMERA CALIBRATION" << endl;
+        cout << "4:\t DISPARITY MAP" << endl;
         cout << "0:\t EXIT" << endl;
         cout << "YOUR CHOICE: ";
 
@@ -356,6 +462,9 @@ int main()
                 break;
             case 51:
                 cameraCalibration();
+                break;
+            case 52:
+                disparityMap();
                 break;
             case 48:
                 return 0;
