@@ -19,8 +19,8 @@ void FishEyeCalibration::calibrateSingleCamera(std::vector<std::vector<cv::Vec3f
     cv::Mat rvecs = cv::Mat::zeros(N_OK, 1, CV_32FC3);
     cv::Mat tvecs = cv::Mat::zeros(N_OK, 1, CV_32FC3);
 
-    cv::TermCriteria calibCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 10, 1e-6);
     int calibrationFlags = cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC |  cv::fisheye::CALIB_FIX_SKEW;
+    cv::TermCriteria calibCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER, 30, 0.001);
     double rms = cv::fisheye::calibrate(objpoints, imgpoints, DIM, K, D, rvecs, tvecs, calibrationFlags, calibCriteria);
     cout << "RMS: " << rms << endl;
 
@@ -55,7 +55,7 @@ bool FishEyeCalibration::calibrateStereoCamera(fs::path calibrationdatafolder, i
 
     cv::Size imageSize(resx, resy);
 
-    cv::TermCriteria TERMINATION_CRITERIA(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.01);
+    cv::TermCriteria TERMINATION_CRITERIA(cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, 30, 1e-6));
     std::string rightorleft = "";
 
     for (int i = 0; i <= 1; i++)

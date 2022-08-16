@@ -2,8 +2,8 @@
 #define CONSTANTS_H
 
 // Глобальные константы
-const int SCREENSHOT_DELAY = 2;  // Интервал между скриншотам
-const int SCREENSHOT_COUNT = 50;  // Количество скриншотов
+const int SCREENSHOT_DELAY = 3;  // Интервал между скриншотам
+const int SCREENSHOT_COUNT = 10;  // Количество скриншотов
 const int ID_WEBCAM_LEFT = 1;   // ID левой web-камеры
 const int ID_WEBCAM_RIGHT = 0;   // ID правой web-камеры
 const int CAMERA_TEST_SUCCESS = -1; // Код успешного завершения теста камер
