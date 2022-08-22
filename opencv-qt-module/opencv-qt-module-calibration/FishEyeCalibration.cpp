@@ -22,7 +22,7 @@ void FishEyeCalibration::calibrateSingleCamera(std::vector<std::vector<cv::Vec3f
     int calibrationFlags = cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC |  cv::fisheye::CALIB_FIX_SKEW;
     cv::TermCriteria calibCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER, 30, 0.001);
     double rms = cv::fisheye::calibrate(objpoints, imgpoints, DIM, K, D, rvecs, tvecs, calibrationFlags, calibCriteria);
-    cout << "RMS: " << rms << endl;
+    cout << "RMS re-projection error: " << rms << endl;
 
     cv::Mat map1;
     cv::Mat map2;
@@ -116,7 +116,7 @@ bool FishEyeCalibration::calibrateStereoCamera(fs::path calibrationdatafolder, i
                 fisheyeFlags,
                 TERMINATION_CRITERIA);
 
-    cout << "RMS: " << rms << endl;
+    cout << "RMS re-projection error: " << rms << endl;
 
     cv::Mat R1, R2, P1, P2, Q;
     cv::fisheye::stereoRectify(leftCameraMatrix, leftDistortionCoefficients, rightCameraMatrix, rightDistortionCoefficients,

@@ -5,6 +5,7 @@ CONFIG -= qt
 
 SOURCES += \
         FishEyeCalibration.cpp \
+        StandardCalibration.cpp \
         main.cpp
 
 win32 {
@@ -25,4 +26,5 @@ unix {
 
 HEADERS += \
     Constants.h \
-    FishEyeCalibration.h
+    FishEyeCalibration.h \
+    StandardCalibration.h
