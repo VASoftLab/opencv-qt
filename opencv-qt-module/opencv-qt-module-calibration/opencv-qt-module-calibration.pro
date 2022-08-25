@@ -5,6 +5,7 @@ CONFIG -= qt
 
 SOURCES += \
         FishEyeCalibration.cpp \
+        KaehlerBradskiCalibration.cpp \
         StandardCalibration.cpp \
         main.cpp
 
@@ -27,4 +28,5 @@ unix {
 HEADERS += \
     Constants.h \
     FishEyeCalibration.h \
+    KaehlerBradskiCalibration.h \
     StandardCalibration.h

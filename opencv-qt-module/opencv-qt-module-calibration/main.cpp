@@ -15,6 +15,7 @@
 #include "Constants.h"
 #include "FishEyeCalibration.h"
 #include "StandardCalibration.h"
+#include "KaehlerBradskiCalibration.h"
 
 #include <string>
 #include <stdio.h>
@@ -137,9 +138,9 @@ void collectImages()
     fs::path folderParent = fs::current_path();
     fs::path folderA = folderParent.parent_path().parent_path();
 
-    fs::path folderL = (folderA / "output\\left");    // Левая камера
-    fs::path folderR = (folderA / "output\\right");   // Правая камера
-    fs::path folderP = (folderA / "output\\pairs");   // Склейка камер
+    fs::path folderL = (folderA / "calibration\\left");    // Левая камера
+    fs::path folderR = (folderA / "calibration\\right");   // Правая камера
+    fs::path folderP = (folderA / "calibration\\pairs");   // Склейка камер
 
     cout << "The application will save images to the folders:" << endl;
     cout << folderL << endl;
@@ -466,19 +467,19 @@ void olegCalibration()
     // Extracting path of individual image stored in a given directory
     std::vector<std::string> imagesL, imagesR;
     // Path of the folder containing checkerboard images
-    std::string pathL = "d:\\SourceCode\\opencv-qt\\output\\stereoL\\*.png";
-    std::string pathR = "d:\\SourceCode\\opencv-qt\\output\\stereoR\\*.png";
+    std::string pathL = "d:\\SourceCode\\opencv-qt\\calibration\\stereoL\\*.png";
+    std::string pathR = "d:\\SourceCode\\opencv-qt\\calibration\\stereoR\\*.png";
 
-    std::string File_Directory = "d:\\SourceCode\\opencv-qt\\output\\stereoL"; // каталог папки
-    std::string File_Directory2 = "d:\\SourceCode\\opencv-qt\\output\\stereoR"; // каталог папки
+    std::string File_Directory = "d:\\SourceCode\\opencv-qt\\calibration\\stereoL"; // каталог папки
+    std::string File_Directory2 = "d:\\SourceCode\\opencv-qt\\calibration\\stereoR"; // каталог папки
 
     std::string FileType = ".png"; // Тип файла для поиска
 
     std::string result_File_Directory = "d:\\result"; // каталог папки
     std::vector<std::string> imgpaths;
 
-    fs::path folderL = "d:\\SourceCode\\opencv-qt\\output\\left";    // Левая камера
-    fs::path folderR = "d:\\SourceCode\\opencv-qt\\output\\right";;   // Правая камера
+    fs::path folderL = "d:\\SourceCode\\opencv-qt\\calibration\\left";    // Левая камера
+    fs::path folderR = "d:\\SourceCode\\opencv-qt\\calibration\\right";;   // Правая камера
 
     for (int screenshotCounter = 1; screenshotCounter <= 50; screenshotCounter++)
     {
@@ -689,7 +690,7 @@ void olegCalibration()
       auto diffStereo = endStereo - startStereo;
       cout << "Stereo camera calibration: " << chrono::duration <double, milli> (diffStereo).count() << " ms" << endl;
 
-      fs::path calibrationdatafolder = "d:\\SourceCode\\opencv-qt\\output\\calibration\\";
+      fs::path calibrationdatafolder = "d:\\SourceCode\\opencv-qt\\calibration\\calibration\\";
 
       // Результаты калибровки должны быть записаны в файл для дальнейшего использования
       std::string fileNameL = "calibration_camera_" + std::to_string(IMG_WIDTH) + "_" + std::to_string(IMG_HEIGHT) + "_left.yml";
@@ -703,6 +704,15 @@ void olegCalibration()
       cv::FileStorage fsR(pathFullNameR.string(), cv::FileStorage::WRITE);
       if (fsR.isOpened())
           fsR << "new_mtxR" << new_mtxR << "distR" << distR << "rect_r" << rect_r << "proj_mat_r" << proj_mat_r << "graySize" << grayR.size() << "Right_Stereo_Map1" << Right_Stereo_Map1 << "Right_Stereo_Map2" << Right_Stereo_Map2;
+}
+//=============================================================================
+// Kaehler Bradski Calibration
+//=============================================================================
+void KBCalibration()
+{
+    KaehlerBradskiCalibration *kbcal = new KaehlerBradskiCalibration("D:\\SourceCode\\opencv-qt\\calibration\\", 640, 480, 50);
+    kbcal->calibrateCamera();
+    delete kbcal;
 }
 //=============================================================================
 // Основная программа
@@ -727,6 +737,7 @@ int main()
         cout << "3:\t CAMERA CALIBRATION" << endl;
         cout << "4:\t DISPARITY MAP" << endl;
         cout << "5:\t OLEG" << endl;
+        cout << "6:\t KAEHLER BRADSKI" << endl;
         cout << "0:\t EXIT" << endl;
         cout << "YOUR CHOICE: ";
 
@@ -750,6 +761,9 @@ int main()
                 break;
             case 53:
                 olegCalibration();
+                break;
+            case 54:
+                KBCalibration();
                 break;
             case 48:
                 return 0;

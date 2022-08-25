@@ -14,9 +14,9 @@ const int SCREEN_WIDTH = 1366;
 const int SCREEN_HEIGHT = 768;
 
 // Параметры калибровочной доски
-const int CHESS_ROWS = 6; // 3
-const int CHESS_COLS = 9; // 5
-const double SQUARE_SIZE = 2.5; // 3.0
+const int CHESS_ROWS = 6; // Кол-во строк
+const int CHESS_COLS = 9; // Кол-во столбцов
+const double CHESS_SQUARE_SIZE = 0.024; // Размер клетки в мм
 
 const bool DRAW_CORNERS_FLAG = false;
 

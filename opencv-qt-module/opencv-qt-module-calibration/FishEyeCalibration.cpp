@@ -171,11 +171,11 @@ void FishEyeCalibration::cameraCalibration()
     fs::path folderParent = fs::current_path();
     fs::path folderA = folderParent.parent_path().parent_path();
 
-    fs::path folderL = (folderA / "output\\left");    // Левая камера
-    fs::path folderR = (folderA / "output\\right");   // Правая камера
-    fs::path folderP = (folderA / "output\\pairs");   // Склейка камер
+    fs::path folderL = (folderA / "calibration\\left");    // Левая камера
+    fs::path folderR = (folderA / "calibration\\right");   // Правая камера
+    fs::path folderP = (folderA / "calibration\\pairs");   // Склейка камер
 
-    fs::path folderC = (folderA / "output\\calibration");
+    fs::path folderC = (folderA / "calibration\\calibration");
     fs::remove_all(folderC);
     fs::create_directories(folderC);
 

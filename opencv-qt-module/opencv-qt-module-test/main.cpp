@@ -14,7 +14,7 @@ int main()
 {
     cout << "Start opencv-qt-module-test" << endl;
 
-    std::filesystem::path outputFolder = (".//output");
+    std::filesystem::path outputFolder = (".//calibration");
     std::filesystem::remove_all(outputFolder);
     std::filesystem::create_directory(outputFolder);
 
