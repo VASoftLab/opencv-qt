@@ -19,28 +19,19 @@ void KaehlerBradskiCalibration::calibrateCamera()
     // Вектор векторов, каждый из которых содрежит координаты точек в одном из видов калибровочного шаблона
     // Координаты задаются в системе координат объекта, поэтому могут быть целыми числами в направлениях X и Y
     // и 0 в направлении Z (если результат калибровки нужен в физических единицах, то координаты тоже в физ. ед.)
-    std::vector<cv::Vec3f> objPoints;
+    std::vector<cv::Vec3f> objPointsVector;
     for (int i = 0; i < CHECKERBOARD.height; i++)
     {
         for (int j = 0; j < CHECKERBOARD.width; j++)
         {
-            objPoints.push_back(cv::Vec3f(j * CHESS_SQUARE_SIZE, i * CHESS_SQUARE_SIZE, 0));
+            objPointsVector.push_back(cv::Vec3f((float)(i * CHESS_SQUARE_SIZE), (float)(j * CHESS_SQUARE_SIZE), 0.f));
         }
     }
 
-    // Сохранение массива objectPoints в файл
-    std::string fileObjectPoints = "objectPoints.xml";
-    fs::path pathToObjPoints = (pathToCalibration / fileObjectPoints);
-
-    cv::FileStorage fsObjPoints(pathToObjPoints.string(), cv::FileStorage::WRITE);
-    if (fsObjPoints.isOpened())
-        fsObjPoints << "objectPoints" << objPoints;
-
     // Вспомогательные объекты
-    std::vector<std::vector<cv::Vec3f>> objPointsLeft;
-    std::vector<std::vector<cv::Vec2f>> imgPointsLeft;
-    std::vector<std::vector<cv::Vec3f>> objPointsRight;
-    std::vector<std::vector<cv::Vec2f>> imgPointsRight;
+    std::vector<std::vector<cv::Vec3f>> objectPoints;
+    std::vector<std::vector<cv::Vec2f>> imagePointsLeft;
+    std::vector<std::vector<cv::Vec2f>> imagePointsRight;
 
     for (int imageIndex = 1; imageIndex <= imageCount; imageIndex++)
     {
@@ -79,17 +70,16 @@ void KaehlerBradskiCalibration::calibrateCamera()
         if (retL && retR)
         {
             // Критерий завершения
-            cv::TermCriteria termCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER, 30, 0.001);
+            cv::TermCriteria termCriteria(cv::TermCriteria::EPS | cv::TermCriteria::MAX_ITER, 30, 1e-6);
 
             // Корректировка углов
             cv::cornerSubPix(grayL, cornersL, cv::Size(11, 11), cv::Size(-1, -1), termCriteria);
             cv::cornerSubPix(grayR, cornersR, cv::Size(11, 11), cv::Size(-1, -1), termCriteria);
 
             // Сохранение точек в массивах
-            objPointsLeft.push_back(objPoints);
-            imgPointsLeft.push_back(cornersL);
-            objPointsRight.push_back(objPoints);
-            imgPointsRight.push_back(cornersR);
+            objectPoints.push_back(objPointsVector);
+            imagePointsLeft.push_back(cornersL);
+            imagePointsRight.push_back(cornersR);
 
             auto end = chrono::steady_clock::now();
             auto diff = end - start;
@@ -99,12 +89,25 @@ void KaehlerBradskiCalibration::calibrateCamera()
             cout << "\tFAIL ..." << endl;
     }
 
-    cout << endl << "Cameras calibration ..." << endl;
-    calibrateSingleCamera(objPointsLeft, imgPointsLeft, CameraPosition::Left);
-    calibrateSingleCamera(objPointsRight, imgPointsRight, CameraPosition::Right);
+    // Сохранение массива objectPoints в файл
+    std::string fileObjectPoints = "objectPoints.xml";
+    fs::path pathToObjPoints = (pathToCalibration / fileObjectPoints);
+
+    cv::FileStorage fsObjPoints(pathToObjPoints.string(), cv::FileStorage::WRITE);
+    if (fsObjPoints.isOpened())
+        fsObjPoints << "objectPoints" << objectPoints;
+
+    // Раздельная калибровка камер
+    cout << endl << "Separate calibration ..." << endl;
+    calibrateSingleCamera(objectPoints, imagePointsLeft, CameraPosition::Left);
+    calibrateSingleCamera(objectPoints, imagePointsRight, CameraPosition::Right);
+
+    // Калибровка стереокамеры
+    cout << endl << "Stereo calibration ..." << endl;
+    calibrateStereoCamera(objectPoints, imagePointsLeft, imagePointsRight);
 }
 
-void KaehlerBradskiCalibration::calibrateSingleCamera(std::vector<std::vector<cv::Vec3f>> objpoints, std::vector<std::vector<cv::Vec2f>> imgpoints, CameraPosition position)
+void KaehlerBradskiCalibration::calibrateSingleCamera(std::vector<std::vector<cv::Vec3f>> objectPoints, std::vector<std::vector<cv::Vec2f>> imagePoints, CameraPosition position)
 {
     auto start = chrono::steady_clock::now();
 
@@ -121,45 +124,181 @@ void KaehlerBradskiCalibration::calibrateSingleCamera(std::vector<std::vector<cv
 
     cout << cameraPosition << " camera: ";
 
-    cv::Mat intrinsic_matrix, distortion_coeffs;
-    cv::Size image_size(imageWidth, imageHeight);
+    cv::Mat cameraMatrix;
+    cv::Mat newCameraMatrix;
+    cv::Mat distCoeffs;
+    cv::Size imageSize(imageWidth, imageHeight);
 
     // Калибровка камеры
+    // Вариант с восьмью элементами выбирается, если поднят флаг cv::CALIB_RATIONAL_MODEL
+    // и применяется для прецизионной калибровки экзотических объективов (c. 565)
     double rms = cv::calibrateCamera(
-                objpoints,
-                imgpoints,
-                image_size,
-                intrinsic_matrix,
-                distortion_coeffs,
+                objectPoints,
+                imagePoints,
+                imageSize,
+                cameraMatrix,
+                distCoeffs,
                 cv::noArray(),
                 cv::noArray(),
-                cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_PRINCIPAL_POINT
+                cv::CALIB_ZERO_TANGENT_DIST | cv::CALIB_FIX_PRINCIPAL_POINT | cv::CALIB_RATIONAL_MODEL
                 );
+
+
+    newCameraMatrix = cv::getOptimalNewCameraMatrix(
+                cameraMatrix,
+                distCoeffs,
+                imageSize,
+                1,
+                imageSize,
+                0);
 
     // Построение карты коррекции дисторсии
     cv::Mat map1;
     cv::Mat map2;
 
     cv::initUndistortRectifyMap(
-        intrinsic_matrix,
-        distortion_coeffs,
+        cameraMatrix,
+        distCoeffs,
         cv::Mat(),
-        intrinsic_matrix,
-        image_size,
+        newCameraMatrix,
+        imageSize,
         CV_16SC2,
         map1,
         map2
       );
 
     // Сохранение параметров в файл калибровки
-
     std::string fileCalibration = cameraPosition + "Camera.xml";
-
     fs::path pathToCalibrationFile = (pathToCalibration / fileCalibration);
 
     cv::FileStorage fsCalibrationFile(pathToCalibrationFile.string(), cv::FileStorage::WRITE);
     if (fsCalibrationFile.isOpened())
-        fsCalibrationFile << "intrinsic_matrix" << intrinsic_matrix << "distortion_coeffs" << distortion_coeffs << "map1" << map1 << "map2" << map2;
+        fsCalibrationFile << "cameraMatrix" << cameraMatrix << "newCameraMatrix" << newCameraMatrix << "distCoeffs" << distCoeffs << "map1" << map1 << "map2" << map2;
+
+    auto end = chrono::steady_clock::now();
+    auto diff = end - start;
+    cout << "RMS = " << rms << " (" << chrono::duration <double, milli> (diff/1000).count() << " sec)" << endl;
+}
+
+void KaehlerBradskiCalibration::calibrateStereoCamera(std::vector<std::vector<cv::Vec3f>> objPoints, std::vector<std::vector<cv::Vec2f>> imagePointsLeft, std::vector<std::vector<cv::Vec2f>> imagePointsRight)
+{
+    cv::Size imageSize(imageWidth, imageHeight);
+
+    cv::Mat cameraMatrixLeft;
+    cv::Mat distCoeffsLeft;
+    cv::Mat cameraMatrixRight;
+    cv::Mat distCoeffsRight;
+
+    cv::Mat R;
+    cv::Mat T;
+    cv::Mat E;
+    cv::Mat F;
+
+    cv::Mat perViewErrors;
+    int flags = cv::CALIB_FIX_INTRINSIC;
+    cv::TermCriteria criteria(cv::TermCriteria(cv::TermCriteria::MAX_ITER | cv::TermCriteria::EPS, 30, 1e-6));
+
+    // Читаем данные калибровки камер
+    std::string fileCalibrationLeft = "LeftCamera.xml";
+    fs::path pathToCalibrationFileLeft = (pathToCalibration / fileCalibrationLeft);
+    cv::FileStorage fsLeft(pathToCalibrationFileLeft.string(), cv::FileStorage::READ);
+    if (fsLeft.isOpened())
+    {
+        fsLeft["cameraMatrix"] >> cameraMatrixLeft;
+        fsLeft["distCoeffs"] >> distCoeffsLeft;
+        fsLeft.release();
+    }
+
+    std::string fileCalibrationRight = "RightCamera.xml";
+    fs::path pathToCalibrationFileRight = (pathToCalibration / fileCalibrationRight);
+    cv::FileStorage fsRight(pathToCalibrationFileRight.string(), cv::FileStorage::READ);
+    if (fsRight.isOpened())
+    {
+        fsRight["cameraMatrix"] >> cameraMatrixRight;
+        fsRight["distCoeffs"] >> distCoeffsRight;
+        fsRight.release();
+    }
+
+    auto start = chrono::steady_clock::now();
+    double rms = cv::stereoCalibrate(
+                objPoints,
+                imagePointsLeft,
+                imagePointsRight,
+                cameraMatrixLeft,
+                distCoeffsLeft,
+                cameraMatrixRight,
+                distCoeffsRight,
+                imageSize,
+                R,
+                T,
+                E,
+                F,
+                perViewErrors,
+                flags,
+                criteria);
+
+    // Ректификация откалиброванной стереопары
+    cv::Mat RLeft; // Матрица ректификации левой камеры
+    cv::Mat RRight; // Матрица ректификации правой камеры
+    cv::Mat PLeft; // Матрица проекции левой камеры
+    cv::Mat PRight; // Матрица проекции правой камеры
+    cv::Mat Q; // Матрица отображения диспаратности на глубину
+    double alpha = 1; // Параметр кадрирования от 0 до 1
+
+    cv::stereoRectify(
+                cameraMatrixLeft,
+                distCoeffsLeft,
+                cameraMatrixRight,
+                distCoeffsRight,
+                imageSize,
+                R,
+                T,
+                RLeft,
+                RRight,
+                PLeft,
+                PRight,
+                Q,
+                cv::CALIB_ZERO_DISPARITY,
+                1);
+
+
+    cv::Mat leftMap1;
+    cv::Mat leftMap2;
+    cv::Mat rightMap1;
+    cv::Mat rightMap2;
+
+    cv::initUndistortRectifyMap(
+                cameraMatrixLeft,
+                distCoeffsLeft,
+                RLeft,
+                PLeft,
+                imageSize,
+                CV_16SC2,
+                leftMap1,
+                leftMap2);
+
+    cv::initUndistortRectifyMap(
+                cameraMatrixRight,
+                distCoeffsRight,
+                RRight,
+                PRight,
+                imageSize,
+                CV_16SC2,
+                rightMap1,
+                rightMap2);
+
+
+    // Сохранение параметров в файл калибровки
+    std::string fileCalibration = "StereoCamera.xml";
+    fs::path pathToCalibrationFile = (pathToCalibration / fileCalibration);
+
+    cv::FileStorage fsCalibrationFile(pathToCalibrationFile.string(), cv::FileStorage::WRITE);
+    if (fsCalibrationFile.isOpened())
+        fsCalibrationFile << "cameraMatrixLeft" << cameraMatrixLeft << "distCoeffsLeft" << distCoeffsLeft
+                          << "cameraMatrixRight" << cameraMatrixRight << "distCoeffsRight" << distCoeffsRight
+                          << "R" << R << "T" << T << "RLeft" << RLeft << "PLeft" << PLeft << "Q" << Q
+                          << "leftMap1" << leftMap1 << "leftMap2" << leftMap2
+                          << "rightMap1" << rightMap1 << "rightMap2" << rightMap2;
 
     auto end = chrono::steady_clock::now();
     auto diff = end - start;

@@ -563,7 +563,7 @@ void olegCalibration()
       auto startLeft = chrono::steady_clock::now();
       cout << endl << "Calibrating left camera ..." << endl;
       // Calibrating left camera
-      double RLeft = cv::calibrateCamera(
+      double leftRMS = cv::calibrateCamera(
                   objpoints,
                   imgpointsL,
                   grayL.size(),
@@ -572,7 +572,7 @@ void olegCalibration()
                   R_L,
                   T_L);
 
-      cout << "RMS re-projection error Left " << RLeft << endl;
+      cout << "RMS re-projection error Left " << leftRMS << endl;
 
       new_mtxL = cv::getOptimalNewCameraMatrix(
                   mtxL,
@@ -589,7 +589,7 @@ void olegCalibration()
       auto startRight = chrono::steady_clock::now();
       cout << endl << "Calibrating rigth camera ..." << endl;
       // Calibrating right camera
-      double RRight = cv::calibrateCamera(
+      double rightRMS = cv::calibrateCamera(
                   objpoints,
                   imgpointsR,
                   grayR.size(),
@@ -598,7 +598,7 @@ void olegCalibration()
                   R_R,
                   T_R);
 
-      cout << "RMS re-projection error Right " << RRight << endl;
+      cout << "RMS re-projection error Right " << rightRMS << endl;
 
       new_mtxR = cv::getOptimalNewCameraMatrix(
                   mtxR,
@@ -625,7 +625,7 @@ void olegCalibration()
 
       auto startStereo = chrono::steady_clock::now();
       cout << endl << "Calibrating stereo camera ..." << endl;
-      cv::stereoCalibrate(
+      double stereoRMS = cv::stereoCalibrate(
                   objpoints,
                   imgpointsL,
                   imgpointsR,
@@ -640,6 +640,7 @@ void olegCalibration()
                   Fmat,
                   flag,
                   cv::TermCriteria(cv::TermCriteria::MAX_ITER + cv::TermCriteria::EPS, 30, 1e-6));
+      cout << "RMS re-projection error Stereo " << stereoRMS << endl;
 
       cv::Mat rect_l, rect_r, proj_mat_l, proj_mat_r, Q;
 

@@ -26,6 +26,7 @@ public:
     KaehlerBradskiCalibration(string pathtocalibrationfolder, int imagewidth, int imageheight, int imagecount);
     void calibrateCamera();
     void calibrateSingleCamera(std::vector<std::vector<cv::Vec3f>> objpoints, std::vector<std::vector<cv::Vec2f>> imgpoints, CameraPosition position);
+    void calibrateStereoCamera(std::vector<std::vector<cv::Vec3f>> objpoints, std::vector<std::vector<cv::Vec2f>> imgpoints1, std::vector<std::vector<cv::Vec2f>> imgpoints2);
 private:
     fs::path pathToCalibration;
     fs::path pathToLeft;
